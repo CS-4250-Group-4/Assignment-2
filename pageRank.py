@@ -7,8 +7,22 @@ if not os.path.exists(savePath):
     os.makedirs(savePath)
 session = requests.Session()
 
-def main():        
-    crawl('https://www.japscan.ws/', 0)
+#Dictionaries to calc page rank
+pageDict = {} #Page, # of outlinks
+linkDict = {} # key Page, list of pages linking to key page
+def main():
+    global pageDict
+    global linkDict
+    crawl('https://www.cpp.edu/index.shtml', 0)
+    #crawl('https://ameblo.jp/', 0)
+    #crawl('https://www.japscan.ws/ ', 0)
+
+    print("\n\n\npageDict, len: " + str(len(pageDict)))
+    printDict(pageDict)
+    
+    linkDict = cleanLinkDict(linkDict)
+    print("\n\n\nlinkDict, len: " + str(len(linkDict)))
+    printDict(linkDict)
     
     #Seeds
         #https://www.cpp.edu/index.shtml
@@ -38,7 +52,6 @@ def crawl(seed, count_seed):
     while((depth < maxDepth) or (len(queue) == 0)):
         depth += 1
         currentUrl = queue.pop(0)
-        print('currentUrl: ' + currentUrl)
 
         if depth == 1:
             get_html = requests.get(currentUrl).content
@@ -52,9 +65,11 @@ def crawl(seed, count_seed):
             #Every 100 pages show the size of the queue
             if(depth%100 == 0):
                 print("Queue length: " + str(len(queue)))
+                print("pageDict length: " + str(len(pageDict)))
+                print("linkDict length: " + str(len(linkDict)))
         
         if(debug):
-            print("requesting: " + currentUrl)
+            print('currentUrl: ' + currentUrl)
         visited.append(currentUrl)
 
         try:
@@ -79,12 +94,14 @@ def crawl(seed, count_seed):
         # call split on link for # and only check first half
         # ex https://docs.python-requests.org/en/latest/#the-contributor-guide
         # ignore #the-contributor-guide and just go to https://docs.python-requests.org/en/latest/
-        print('outlinks: ' + str(outlinks))
         for link in outlinks:
             if((link not in visited) and (link not in queue)):
                 queue.append(link)
+        #Add the page and its number of outlinks to pageDict
+        #Add the page to each outlink's linkDict list value
+        addToDict(page, outlinks)
                 
-    if (debug):
+    if (debug and False):
         for link in queue:
             print(link)
         print("\n\nVISITED\n")
@@ -95,6 +112,7 @@ def crawl(seed, count_seed):
 
 
 def getLinks(page):
+    debug = False
     currentUrl = str(page.url)
     domain = currentUrl.split("/")[2]
     #Go through the html page passed as page and collect any valid
@@ -107,17 +125,63 @@ def getLinks(page):
     #Go through each a tag and filter out the good links
     for i in range(len(outlinks)):
         link = (outlinks[i]["href"])
-        if link[0] == '/':
-            link = currentUrl + link[1:]
-        if link[0] != "#" and len(link) > len(domain):
-            if link.split(":")[0] != "mailto":
-                if link.split("/")[2] == domain:
-                    if link[0:5] == "http:":
-                        link = "https:" + link.split("http:")[1]
-                    trueOutlinks.append(link)
-                    print("Link " + str(i) + ": "+ link)
+        #only accept links that start with http, www, or /
+        if link:
+            if (link[0] == "/" or ( len(link) > 4 and (link[0:3] == "www" or link[0:4] == "http"))):
+                if link[0] == '/':
+                    link = currentUrl + link[1:]
+                elif link[0:3] == "www":
+                    link = "https://" + link
+                else:
+                    #print("split link at /  link: " + link + "\nfrom " + page.url)
+                    if link.split(":")[0] != "mailto":
+                        if link.split("/")[2] == domain:
+                            if link[0:5] == "http:":
+                                link = "https:" + link.split("http:")[1]
+                            trueOutlinks.append(link)
+                            if debug:
+                                print("Link " + str(i) + ": "+ link)
 
     return trueOutlinks
+
+
+def addToDict(page, outlinks):
+    global pageDict
+    global linkDict
+    debug = False
+    currentUrl = str(page.url)
+    #pageDict = {} #Page, # of outlinks
+    #linkDict = {} # key Page, list of pages linking to key page
+
+    #Add the page as a key if it isnt in PageDict yet
+    if (currentUrl not in pageDict):
+        pageDict[currentUrl] = len(outlinks)
+    #Add the page to all of it's outlink's linkDict entries
+    for link in outlinks:
+        if debug:
+            print("\n\n\nlinkDict\n")
+            printDict(linkDict)
+        if (link not in linkDict):
+            if debug:
+                print("add " + currentUrl + " to " + link)
+            linkDict[link] = {currentUrl}
+        else:
+            if debug:
+                print(link + " in linkDict already.\nContains: " + str(linkDict[link]))
+            linkDict[link].add(currentUrl)
+    if debug:
+        print("pageDict length is " + str(len(pageDict)))
+        print("linkDict length is " + str(len(linkDict)))
+
+#Used to remove any pages from linkDict that arent in the first (max depth) pages
+def cleanLinkDict(linkDict):
+    cleanDict = {}
+    for link in pageDict.keys():
+        if link in linkDict:
+            cleanDict[link] = linkDict[link]
+
+    return cleanDict
+    
 
 def save_inlink_csv():
     global seed_count
@@ -130,6 +194,12 @@ def save_inlink_csv():
         csvwriter = csv.writer(csvfile, lineterminator='\n')
         csvwriter.writerows(report_info)
     report_info.clear()
+
+
+def printDict(dictionary):
+    for key in dictionary.keys():
+        print(str(key) + ": " + str(dictionary[key]))
+
 
 if __name__ == '__main__':
     main()
