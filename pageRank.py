@@ -10,12 +10,14 @@ session = requests.Session()
 #Dictionaries to calc page rank
 pageDict = {} #Page, # of outlinks
 linkDict = {} # key Page, list of pages linking to key page
+
+disallowed_url_arr = [] # array of disallowed pages from robots.txt
 def main():
     global pageDict
     global linkDict
-    crawl('https://www.cpp.edu/index.shtml', 0)
+    #crawl('https://www.cpp.edu/index.shtml', 0)
     #crawl('https://ameblo.jp/', 0)
-    #crawl('https://www.japscan.ws/ ', 0)
+    crawl('https://www.japscan.ws/ ', 0)
 
     print("\n\n\npageDict, len: " + str(len(pageDict)))
     printDict(pageDict)
@@ -30,7 +32,7 @@ def main():
         #https://www.japscan.ws/ 
 
 def crawl(seed, count_seed):
-    debug = False
+    debug = True
     depth = 0
     maxDepth = 500
     visited = []
@@ -41,6 +43,7 @@ def crawl(seed, count_seed):
 
     domain = seed.split("/")[2]
     queue.append(seed)
+    init_robot_info("https://" + domain + "/")
     
     session.headers.update({'Host': domain,
                             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -52,23 +55,23 @@ def crawl(seed, count_seed):
     while((depth < maxDepth) or (len(queue) == 0)):
         depth += 1
         currentUrl = queue.pop(0)
+        if (not isAllowed(currentUrl)):
+            break;
 
         if depth == 1:
             get_html = requests.get(currentUrl).content
             soup_lang = BeautifulSoup(get_html, 'html.parser')
             print("Language is: " + soup_lang.html["lang"])
 
-
-        #Every 20 pages print show the depth in the console
-        if(depth%20 == 0):
-            print("depth: " + str(depth) + "/" + str(maxDepth))
-            #Every 100 pages show the size of the queue
-            if(depth%100 == 0):
-                print("Queue length: " + str(len(queue)))
-                print("pageDict length: " + str(len(pageDict)))
-                print("linkDict length: " + str(len(linkDict)))
-        
-        if(debug):
+        if debug:
+            #Every 20 pages print show the depth in the console
+            if(depth%20 == 0):
+                print("depth: " + str(depth) + "/" + str(maxDepth))
+                #Every 100 pages show the size of the queue
+                if(depth%100 == 0):
+                    print("Queue length: " + str(len(queue)))
+                    print("pageDict length: " + str(len(pageDict)))
+                    print("linkDict length: " + str(len(linkDict)))
             print('currentUrl: ' + currentUrl)
         visited.append(currentUrl)
 
@@ -110,6 +113,26 @@ def crawl(seed, count_seed):
         print("\nQueue length: " + str(len(queue)) +
               "\tVisited length: " + str(len(visited)))
 
+def init_robot_info(link):
+    disallowed_url_arr.clear()
+    url = link + 'robots.txt'
+    robot_txt = session.get(url, timeout=5).text
+
+    robot_txt_lines = robot_txt.split('\n')
+    if(len(robot_txt_lines) == 0):
+        return
+
+    for line in robot_txt_lines:
+        line_arr = line.split(' ')
+        if(len(line_arr) > 1):
+            if((line_arr[0] == 'Disallow:') and (line_arr[1])):
+                disallowed_url_arr.append(line_arr[1])
+
+def isAllowed(link):
+    for text in disallowed_url_arr:
+        if(text in link):
+            return False
+    return True
 
 def getLinks(page):
     debug = False
@@ -120,18 +143,25 @@ def getLinks(page):
     soup = BeautifulSoup(page.text, 'html.parser')
     outlinks = soup.find_all("a", href=True)
     
-    trueOutlinks = []
-    
+    trueOutlinks = []    
     #Go through each a tag and filter out the good links
     for i in range(len(outlinks)):
         link = (outlinks[i]["href"])
         #only accept links that start with http, www, or /
         if link:
             if (link[0] == "/" or ( len(link) > 4 and (link[0:3] == "www" or link[0:4] == "http"))):
+                #strip any %20 at the end of a link
+                if(currentUrl[-3:] == "%20"):
+                    currentUrl = currentUrl[:-3]
                 if link[0] == '/':
-                    link = currentUrl + link[1:]
+                    if len(link) > 1:
+                        link = currentUrl + link[1:]
+                        trueOutlinks.append(link)
+                    else:
+                        pass        
                 elif link[0:3] == "www":
                     link = "https://" + link
+                    trueOutlinks.append(link)
                 else:
                     #print("split link at /  link: " + link + "\nfrom " + page.url)
                     if link.split(":")[0] != "mailto":
@@ -179,7 +209,6 @@ def cleanLinkDict(linkDict):
     for link in pageDict.keys():
         if link in linkDict:
             cleanDict[link] = linkDict[link]
-
     return cleanDict
     
 
