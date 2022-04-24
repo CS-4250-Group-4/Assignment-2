@@ -13,18 +13,19 @@ linkDict = {} # key Page, list of pages linking to key page
 
 disallowed_url_arr = [] # array of disallowed pages from robots.txt
 def main():
+    debug = False
     global pageDict
     global linkDict
-    #crawl('https://www.cpp.edu/index.shtml', 0)
+    crawl('https://www.cpp.edu/index.shtml', 0)
     #crawl('https://ameblo.jp/', 0)
-    crawl('https://www.japscan.ws/ ', 0)
+    #crawl('https://www.japscan.ws/ ', 0)
 
-    print("\n\n\npageDict, len: " + str(len(pageDict)))
-    printDict(pageDict)
-    
-    linkDict = cleanLinkDict(linkDict)
-    print("\n\n\nlinkDict, len: " + str(len(linkDict)))
-    printDict(linkDict)
+    if debug:
+        print("\n\n\npageDict, len: " + str(len(pageDict)))
+        printDict(pageDict)
+        
+        print("\n\n\nlinkDict, len: " + str(len(linkDict)))
+        printDict(linkDict)
     
     #Seeds
         #https://www.cpp.edu/index.shtml
@@ -32,6 +33,11 @@ def main():
         #https://www.japscan.ws/ 
 
 def crawl(seed, count_seed):
+    global pageDict
+    global linkDict
+    pageDict = {}
+    linkDict = {}
+    
     debug = True
     depth = 0
     maxDepth = 500
@@ -84,7 +90,7 @@ def crawl(seed, count_seed):
             while(num_try < 5):
                 time.sleep(5)
                 page = session.get(currentUrl, timeout=25)
-                if(page is not NULL):
+                if(page):
                     break
                 num_try += 1
         except requests.exceptions.TooManyRedirects:
@@ -112,6 +118,11 @@ def crawl(seed, count_seed):
             print(link)
         print("\nQueue length: " + str(len(queue)) +
               "\tVisited length: " + str(len(visited)))
+
+    #Remove any links that arent in the pages downloaded
+    linkDict = cleanLinkDict(linkDict)
+    dictToCsv("pageDict_" + domain.split(".")[1], pageDict)
+    dictToCsv("linkDict_" + domain.split(".")[1], linkDict)
 
 def init_robot_info(link):
     disallowed_url_arr.clear()
@@ -155,7 +166,7 @@ def getLinks(page):
                     currentUrl = currentUrl[:-3]
                 if link[0] == '/':
                     if len(link) > 1:
-                        link = currentUrl + link[1:]
+                        link = "https://" + domain + link
                         trueOutlinks.append(link)
                     else:
                         pass        
@@ -210,21 +221,30 @@ def cleanLinkDict(linkDict):
         if link in linkDict:
             cleanDict[link] = linkDict[link]
     return cleanDict
+
     
+def dictToCsv(filename, dictionary):#, fields):
+    #pageDict = {} #Page, # of outlinks
+    #linkDict = {} # key Page, list of pages linking to key page
+    filename += ".csv"
+    keys = dictionary.keys()
 
-def save_inlink_csv():
-    global seed_count
-    fields = ['URL', '# of in Links', 'in Links']
-    report_info.insert(0, fields)
-    filename = "report" + str(seed_count) + ".csv"
-
-    # writing to csv file
-    with open(filename, 'w', ) as csvfile:
-        csvwriter = csv.writer(csvfile, lineterminator='\n')
-        csvwriter.writerows(report_info)
-    report_info.clear()
-
-
+    try:
+        # writing to csv file
+        with open(filename, 'w') as csvfile:
+            for entry in dictionary:
+                csvfile.write(entry + ",")
+                for j in range(len(dictionary[entry]) - 1):
+                    csvfile.write(str(dictionary[entry][j]) + ":")
+                csvfile.write(str(dictionary[entry][-1]) + "\n")
+    except:
+        # writing to csv if its just a regular dict without an array
+        with open(filename, 'w') as csvfile:
+            for entry in dictionary:
+                entry = str(entry)
+                csvfile.write(entry + ",")
+                csvfile.write(str(dictionary[entry]) + "\n")
+                
 def printDict(dictionary):
     for key in dictionary.keys():
         print(str(key) + ": " + str(dictionary[key]))
