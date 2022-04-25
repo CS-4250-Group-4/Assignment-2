@@ -16,8 +16,8 @@ def main():
     debug = False
     global pageDict
     global linkDict
-    crawl('https://www.cpp.edu/index.shtml', 0)
-    #crawl('https://ameblo.jp/', 0)
+    #crawl('https://www.cpp.edu/index.shtml', 0)
+    crawl('https://ameblo.jp/', 0)
     #crawl('https://www.japscan.ws/ ', 0)
 
     if debug:
@@ -121,8 +121,13 @@ def crawl(seed, count_seed):
 
     #Remove any links that arent in the pages downloaded
     linkDict = cleanLinkDict(linkDict)
-    dictToCsv("pageDict_" + domain.split(".")[1], pageDict)
-    dictToCsv("linkDict_" + domain.split(".")[1], linkDict)
+    filename = domain.split(".")
+    if filename[0] == "www":
+        dictToCsv("pageDict_" + filename[1], pageDict)
+        dictToCsv("linkDict_" + filename[1], linkDict)
+    else:
+        dictToCsv("pageDict_" + filename[0], pageDict)
+        dictToCsv("linkDict_" + filename[0], linkDict)
 
 def init_robot_info(link):
     disallowed_url_arr.clear()
