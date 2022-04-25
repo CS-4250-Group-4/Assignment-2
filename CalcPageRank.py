@@ -1,5 +1,3 @@
-wdads 
-
 def main():
     #domains
     domain = "cpp"
