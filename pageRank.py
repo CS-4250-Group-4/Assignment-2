@@ -38,7 +38,7 @@ def crawl(seed, count_seed):
     pageDict = {}
     linkDict = {}
     
-    debug = True
+    debug = False
     depth = 0
     maxDepth = 500
     visited = []
@@ -195,7 +195,7 @@ def addToDict(page, outlinks):
     global pageDict
     global linkDict
     debug = False
-    currentUrl = str(page.url)
+    currentUrl = str(page.url).replace(",", "%comma%")
     #pageDict = {} #Page, # of outlinks
     #linkDict = {} # key Page, list of pages linking to key page
 
@@ -234,7 +234,7 @@ def dictToCsv(filename, dictionary):#, fields):
     filename += ".csv"
     keys = dictionary.keys()
 
-    try:
+    """try:
         # writing to csv file
         with open(filename, 'w') as csvfile:
             for entry in dictionary:
@@ -242,13 +242,13 @@ def dictToCsv(filename, dictionary):#, fields):
                 for j in range(len(dictionary[entry]) - 1):
                     csvfile.write(str(dictionary[entry][j]) + ":")
                 csvfile.write(str(dictionary[entry][-1]) + "\n")
-    except:
-        # writing to csv if its just a regular dict without an array
-        with open(filename, 'w') as csvfile:
-            for entry in dictionary:
-                entry = str(entry)
-                csvfile.write(entry + ",")
-                csvfile.write(str(dictionary[entry]) + "\n")
+    except:"""
+    # writing to csv if its just a regular dict without an array
+    with open(filename, 'w') as csvfile:
+        for entry in dictionary:
+            entry = str(entry)
+            csvfile.write(entry + ",")
+            csvfile.write(str(dictionary[entry]) + "\n")
                 
 def printDict(dictionary):
     for key in dictionary.keys():
