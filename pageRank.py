@@ -16,8 +16,8 @@ def main():
     debug = False
     global pageDict
     global linkDict
-    #crawl('https://www.cpp.edu/index.shtml', 0)
-    crawl('https://ameblo.jp/', 0)
+    crawl('https://www.cpp.edu/index.shtml', 0)
+    #crawl('https://ameblo.jp/', 0)
     #crawl('https://www.japscan.ws/ ', 0)
 
     if debug:
@@ -123,11 +123,11 @@ def crawl(seed, count_seed):
     linkDict = cleanLinkDict(linkDict)
     filename = domain.split(".")
     if filename[0] == "www":
-        dictToCsv("pageDict_" + filename[1], pageDict)
-        dictToCsv("linkDict_" + filename[1], linkDict)
+        dictToCsv(filename[1]  + "_pageDict", pageDict)
+        dictToCsv(filename[1] + "_linkDict", linkDict)
     else:
-        dictToCsv("pageDict_" + filename[0], pageDict)
-        dictToCsv("linkDict_" + filename[0], linkDict)
+        dictToCsv(filename[0]  + "_pageDict", pageDict)
+        dictToCsv(filename[0] + "_linkDict", linkDict)
 
 def init_robot_info(link):
     disallowed_url_arr.clear()
@@ -210,11 +210,17 @@ def addToDict(page, outlinks):
         if (link not in linkDict):
             if debug:
                 print("add " + currentUrl + " to " + link)
-            linkDict[link] = {currentUrl}
+            linkDict[link] = [currentUrl]
         else:
             if debug:
                 print(link + " in linkDict already.\nContains: " + str(linkDict[link]))
-            linkDict[link].add(currentUrl)
+
+            linkDict[link].append(currentUrl)
+
+            if debug:
+                print("becomes")
+                print(linkDict[link])
+                print()
     if debug:
         print("pageDict length is " + str(len(pageDict)))
         print("linkDict length is " + str(len(linkDict)))
