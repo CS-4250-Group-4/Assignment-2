@@ -62,12 +62,13 @@ def crawl(seed, count_seed):
         depth += 1
         currentUrl = queue.pop(0)
         if (not isAllowed(currentUrl)):
-            break;
+            break
 
         if depth == 1:
             get_html = requests.get(currentUrl).content
             soup_lang = BeautifulSoup(get_html, 'html.parser')
             print("Language is: " + soup_lang.html["lang"])
+            print("Crawl Started")
 
         if debug:
             #Every 20 pages print show the depth in the console
@@ -98,7 +99,7 @@ def crawl(seed, count_seed):
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
 
-        outlinks = getLinks(page)
+        outlinks = getLinks(page, currentUrl)
         
         # call split on link for # and only check first half
         # ex https://docs.python-requests.org/en/latest/#the-contributor-guide
@@ -108,7 +109,7 @@ def crawl(seed, count_seed):
                 queue.append(link)
         #Add the page and its number of outlinks to pageDict
         #Add the page to each outlink's linkDict list value
-        addToDict(page, outlinks)
+        addToDict(page, outlinks, currentUrl)
                 
     if (debug and False):
         for link in queue:
@@ -119,6 +120,8 @@ def crawl(seed, count_seed):
         print("\nQueue length: " + str(len(queue)) +
               "\tVisited length: " + str(len(visited)))
 
+    print("Crawl Complete")
+
     #Remove any links that arent in the pages downloaded
     linkDict = cleanLinkDict(linkDict)
     filename = domain.split(".")
@@ -128,6 +131,7 @@ def crawl(seed, count_seed):
     else:
         dictToCsv(filename[0]  + "_pageDict", pageDict)
         dictToCsv(filename[0] + "_linkDict", linkDict)
+    print("Files Saved")
 
 def init_robot_info(link):
     disallowed_url_arr.clear()
@@ -150,16 +154,15 @@ def isAllowed(link):
             return False
     return True
 
-def getLinks(page):
+def getLinks(page, currentUrl):
     debug = False
-    currentUrl = str(page.url)
     domain = currentUrl.split("/")[2]
     #Go through the html page passed as page and collect any valid
     #links, modifying some of them to have a similar format throughout
     soup = BeautifulSoup(page.text, 'html.parser')
     outlinks = soup.find_all("a", href=True)
     
-    trueOutlinks = []    
+    trueOutlinks = []
     #Go through each a tag and filter out the good links
     for i in range(len(outlinks)):
         link = (outlinks[i]["href"])
@@ -167,8 +170,8 @@ def getLinks(page):
         if link:
             if (link[0] == "/" or ( len(link) > 4 and (link[0:3] == "www" or link[0:4] == "http"))):
                 #strip any %20 at the end of a link
-                if(currentUrl[-3:] == "%20"):
-                    currentUrl = currentUrl[:-3]
+                #if(currentUrl[-3:] == "%20"):
+                #    currentUrl = currentUrl[:-3]
                 if link[0] == '/':
                     if len(link) > 1:
                         link = "https://" + domain + link
@@ -191,13 +194,13 @@ def getLinks(page):
     return trueOutlinks
 
 
-def addToDict(page, outlinks):
+def addToDict(page, outlinks, currentUrl):
     global pageDict
     global linkDict
     debug = False
-    currentUrl = str(page.url).replace(",", "%comma%")
+    currentUrl = currentUrl.replace(",", "%comma%")
     #pageDict = {} #Page, # of outlinks
-    #linkDict = {} # key Page, list of pages linking to key page
+    #linkDict = {} #Key Page, list of pages linking to key page
 
     #Add the page as a key if it isnt in PageDict yet
     if (currentUrl not in pageDict):
