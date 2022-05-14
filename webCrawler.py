@@ -23,7 +23,7 @@ session = requests.Session()
 def crawl(seed, count_seed):
     debug = False
     depth = 0
-    maxDepth = 500
+    maxDepth = 5
     visited = []
     
     #Check robots.txt for any restricted pages
