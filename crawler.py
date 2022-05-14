@@ -194,7 +194,7 @@ def index_webpages():
                 for each_word in words:
                     word_list.append(each_word)
             clean_index_words(word_list, file_name)
-
+            word_list.clear()
 
 def clean_index_words(words_list, file_name):
     cleaned_words_list = []
