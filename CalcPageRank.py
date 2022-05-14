@@ -43,19 +43,35 @@ def main():
         maxPage = ""
         maxPage2 = ""
         maxPage3 = ""
+        #Sum of all pages page rank
+        pageRankSum = 0.0
+        #Remove any links that are just linking to themself
+        try:
+            for page in pageDict:
+                for inlink in linkDict[page]:
+                    if(inlink == page):
+                        linkDict[page].remove(inlink)
+                        pageDict[page] = (str(int(pageDict[page][0]) - 1), pageDict[page][1])
+        except(KeyError):
+            pass
+            #print("KEYERROR: " + str(page) + ", ")
+
+        
         for page in pageDict:
-            inlinkSum = 0
+            inlinkSum = 0.0
             try:
                 for inlink in linkDict[page]:
                     if pageDict[inlink][0] == "0":
                         inlinkSum += 0
                     else:
                         inlinkSum += pageDict[inlink][1]/int(pageDict[inlink][0])
-                pageDict[page] = (pageDict[page][0], inlinkSum)
+                    pageDict[page] = (pageDict[page][0], inlinkSum)
             except(KeyError):
                 #print("not found in linkDict" + page)
                 pass
+            pageRankSum += float(pageDict[page][1])
         print("CYCLE " + str(i) + " COMPLETE")
+        print("Page Rank Sum: " + str(pageRankSum))
         for page in pageDict:
             #print(page + "/t" + str(pageDict[page]))
             #print(pageDict[page][1])
