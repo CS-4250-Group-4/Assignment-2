@@ -10,8 +10,11 @@ session = requests.Session()
 #Dictionaries to calc page rank
 pageDict = {} #Page, # of outlinks
 linkDict = {} # key Page, list of pages linking to key page
+finalLinkDict = {}
+inLink = {}
 
 disallowed_url_arr = [] # array of disallowed pages from robots.txt
+
 def main():
     debug = False
     global pageDict
@@ -120,14 +123,22 @@ def crawl(seed, count_seed):
               "\tVisited length: " + str(len(visited)))
 
     #Remove any links that arent in the pages downloaded
-    linkDict = cleanLinkDict(linkDict)
+    #finalLinkDict = cleanLinkDict(linkDict)
+    for key in pageDict.keys():
+        if key in linkDict.keys():
+            finalLinkDict[key] = linkDict[key]
+    
+    createILDict(pageDict, finalLinkDict)
+
     filename = domain.split(".")
     if filename[0] == "www":
         dictToCsv(filename[1]  + "_pageDict", pageDict)
-        dictToCsv(filename[1] + "_linkDict", linkDict)
+        dictToCsv(filename[1] + "_outlinkDict", finalLinkDict)
+        dictToCsv(filename[1] + "_inlinkDict", inLink)
     else:
         dictToCsv(filename[0]  + "_pageDict", pageDict)
-        dictToCsv(filename[0] + "_linkDict", linkDict)
+        dictToCsv(filename[0] + "_outlinkDict", finalLinkDict)
+        dictToCsv(filename[0] + "_inlinkDict", inLink)
 
 def init_robot_info(link):
     disallowed_url_arr.clear()
@@ -196,8 +207,6 @@ def addToDict(page, outlinks):
     global linkDict
     debug = False
     currentUrl = str(page.url).replace(",", "%comma%")
-    #pageDict = {} #Page, # of outlinks
-    #linkDict = {} # key Page, list of pages linking to key page
 
     #Add the page as a key if it isnt in PageDict yet
     if (currentUrl not in pageDict):
@@ -207,33 +216,34 @@ def addToDict(page, outlinks):
         if debug:
             print("\n\n\nlinkDict\n")
             printDict(linkDict)
-        if (link not in linkDict):
-            if debug:
-                print("add " + currentUrl + " to " + link)
-            linkDict[link] = [currentUrl]
+        #OLD Code 
+        #if (link not in linkDict):
+        #    linkDict[currentUrl] = link
+        if (currentUrl not in linkDict.keys()):
+            linkDict[currentUrl] = link
+            #linkDict[link] = [currentUrl]
         else:
             if debug:
                 print(link + " in linkDict already.\nContains: " + str(linkDict[link]))
+            linkDict[currentUrl] = outlinks
+            #OLD Code
+            #linkDict[link].append(currentUrl)
 
-            linkDict[link].append(currentUrl)
-
-            if debug:
-                print("becomes")
-                print(linkDict[link])
-                print()
-    if debug:
-        print("pageDict length is " + str(len(pageDict)))
-        print("linkDict length is " + str(len(linkDict)))
-
-#Used to remove any pages from linkDict that arent in the first (max depth) pages
-def cleanLinkDict(linkDict):
-    cleanDict = {}
-    for link in pageDict.keys():
-        if link in linkDict:
-            cleanDict[link] = linkDict[link]
-    return cleanDict
-
-    
+def createILDict(pageD, linkD):
+    for page in pageD:
+        tempList = []
+        try:
+            for link in linkD.keys():
+                if page != link:
+                    linkList = linkD[link]
+                    for value in linkList:
+                        if value == page:
+                            tempList.append(link)
+                    inLink[page] = tempList
+        except(KeyError):
+            print("not found in linkDict" + page)
+    print("done")
+   
 def dictToCsv(filename, dictionary):#, fields):
     #pageDict = {} #Page, # of outlinks
     #linkDict = {} # key Page, list of pages linking to key page

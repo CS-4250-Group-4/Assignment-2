@@ -1,3 +1,7 @@
+import colorama
+from colorama import Fore
+
+
 def main():
     global pageDict
     global linkDict
@@ -9,9 +13,10 @@ def main():
 
     linkDict = {}
     pageDict = {}
+    inLink = {}
 
     #Load in all the pages visited(pageDict) and all the in-links(linkDict)
-    with open("linkDict_" + domain + ".csv") as csvfile:
+    with open(domain+ "_inlinkDict.csv") as csvfile:
         lines = csvfile.read().split('\n')
         for line in lines:
             #Loop through the string array and convert it back to code
@@ -22,20 +27,15 @@ def main():
                 vals = line.replace("[","").replace("]","").replace("\'","").replace(" ","")
                 vals = vals.split(",")
                 for val in vals:
-                    inlinks.append(val)
+                    if val != vals[0]:
+                        inlinks.append(val)
             linkDict[line.split(",")[0]] = inlinks
-    with open("pageDict_" + domain + ".csv") as csvfile:
+    with open(domain+ "_pageDict.csv") as csvfile:
         lines = csvfile.read().split('\n')
         for line in lines:
             if line:
                 pageDict[line.split(",")[0]] = (line.split(",")[1], 1/(len(lines) - 1))
 
-
-    #First run of calculating page rank
-
-    #Get the page from pageDict, loop through in-links from linkDict
-
-    #Sum up the in-link prvalue/ in-link # of outlinks
     for i in range(10):
         maxRank = 0
         maxRank2 = 0
@@ -55,32 +55,50 @@ def main():
             except(KeyError):
                 #print("not found in linkDict" + page)
                 pass
-        print("CYCLE " + str(i) + " COMPLETE")
-        for page in pageDict:
+
+    for page in pageDict:
+        inSum = 0
+        try:
+            for link in linkDict:
+                if page != link:
+                    linkList = linkDict[link]
+                    for value in linkList:
+                        if value == page:
+                            inSum += 1
+                            inLink[page] = inSum
+
+        except(KeyError):
+            pass
+    #for key in inLink:
+    #    temp = inLink[key]
+    #    print("{"+key+" : "+str(temp)+"}")
+
+        #print("CYCLE " + str(i) + " COMPLETE")
+        #for page in pageDict:
             #print(page + "/t" + str(pageDict[page]))
             #print(pageDict[page][1])
-            pass
-            if (pageDict[page][1] > maxRank):
-                maxRank = pageDict[page][1]
-                maxPage = page
-            elif (pageDict[page][1] > maxRank2):
-                maxRank2 = pageDict[page][1]
-                maxPage2 = page
-            elif (pageDict[page][1] > maxRank3):
-                maxRank3 = pageDict[page][1]
-                maxPage3 = page
-        print(maxPage + ": " + str(maxRank))
-        print(len(linkDict[maxPage]))
-        print(maxPage2 + ": " + str(maxRank2))
-        print(len(linkDict[maxPage2]))
-        print(maxPage3 + ": " + str(maxRank3))
-        print(len(linkDict[maxPage3]))
+            #pass
+         #   if (pageDict[page][1] > maxRank):
+          #      maxRank = pageDict[page][1]
+           #     maxPage = page
+            #elif (pageDict[page][1] > maxRank2):
+            #    maxRank2 = pageDict[page][1]
+            #    maxPage2 = page
+            #elif (pageDict[page][1] > maxRank3):
+            #    maxRank3 = pageDict[page][1]
+            #    maxPage3 = page
+        #print(maxPage + ": " + str(maxRank))
+        #print(len(linkDict[maxPage]))
+        #print(maxPage2 + ": " + str(maxRank2))
+        #print(len(linkDict[maxPage2]))
+        #print(maxPage3 + ": " + str(maxRank3))
+        #print(len(linkDict[maxPage3]))
 
         dictToCsv(domain + "_pageRank")
         
 def dictToCsv(filename):#, fields):
-    global pageDict
-    global linkDict
+    #global pageDict
+    #global linkDict
     #pageDict = {} #Page, # of outlinks
     #linkDict = {} # key Page, list of pages linking to key page
     filename += ".csv"
@@ -94,7 +112,7 @@ def dictToCsv(filename):#, fields):
             try:
                 csvfile.write(str(len(linkDict[entry])) + ",")
             except KeyError:
-                csvfile.write("0,")
+                csvfile.write(Fore.RED + "XXXXXXXXXXXXXXXXXXXXXXXXXXX,")
             csvfile.write(str(pageDict[entry]).replace("(","").replace(")","").replace("\'","").replace(" ","") + "\n")
             
 if __name__ == "__main__":
