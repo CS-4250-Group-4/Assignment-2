@@ -71,7 +71,8 @@ def crawl(seed, count_seed):
             page = session.get(currentUrl, timeout=5)
             if download:
                 #save the current page's html to the repositroy folder
-                completePath = os.path.normpath(savePath + seed.split(":")[1] + "\\" + str(depth) + ".html")
+                #completePath = os.path.normpath(savePath + seed.split(":")[1] + "\\" + str(depth) + ".html")
+                completePath = os.path.normpath(savePath + seed.split(":")[1] + "\\" + currentUrl + ".html")
                 with open(completePath, 'w', encoding="utf-8") as file:
                     file.write(page.text)
                 
@@ -229,7 +230,7 @@ def save_report_csv(count_seed):
         csvwriter.writerows(report_info)
     report_info.clear()
     
-def main():
+def crawlMain():
     count_seed = 0
     while(True):
         seed = input('Enter seed URL (or \'done\' to end): \n')
@@ -252,4 +253,4 @@ def main():
             print("Crawl took " + str(round(crawlStop - crawlStart, 4)) + " seconds")
 
 if __name__ == '__main__':
-    main()
+    crawlMain()

@@ -11,7 +11,7 @@ def main():
     pageDict = {}
 
     #Load in all the pages visited(pageDict) and all the in-links(linkDict)
-    with open("linkDict_" + domain + ".csv") as csvfile:
+    with open(domain + "_linkDict" + ".csv") as csvfile:
         lines = csvfile.read().split('\n')
         for line in lines:
             #Loop through the string array and convert it back to code
@@ -24,7 +24,7 @@ def main():
                 for val in vals:
                     inlinks.append(val)
             linkDict[line.split(",")[0]] = inlinks
-    with open("pageDict_" + domain + ".csv") as csvfile:
+    with open(domain + "_pageDict" + ".csv") as csvfile:
         lines = csvfile.read().split('\n')
         for line in lines:
             if line:
