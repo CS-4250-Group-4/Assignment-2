@@ -70,8 +70,8 @@ def main():
                 #print("not found in linkDict" + page)
                 pass
             pageRankSum += float(pageDict[page][1])
-        print("CYCLE " + str(i) + " COMPLETE")
-        print("Page Rank Sum: " + str(pageRankSum))
+        #print("CYCLE " + str(i) + " COMPLETE")
+        #print("Page Rank Sum: " + str(pageRankSum))
         for page in pageDict:
             #print(page + "/t" + str(pageDict[page]))
             #print(pageDict[page][1])
@@ -85,14 +85,16 @@ def main():
             elif (pageDict[page][1] > maxRank3):
                 maxRank3 = pageDict[page][1]
                 maxPage3 = page
+    print("Results saved to " + domain + "_pageRank.csv")
+    dictToCsv(domain + "_pageRank")
+"""
         print(maxPage + ": " + str(maxRank))
         print(len(linkDict[maxPage]))
         print(maxPage2 + ": " + str(maxRank2))
         print(len(linkDict[maxPage2]))
         print(maxPage3 + ": " + str(maxRank3))
         print(len(linkDict[maxPage3]))
-
-        dictToCsv(domain + "_pageRank")
+"""
         
 def dictToCsv(filename):#, fields):
     global pageDict

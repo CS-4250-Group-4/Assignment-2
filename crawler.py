@@ -56,12 +56,14 @@ def crawl(seed, count_seed):
 
 
         #Every 20 pages print show the depth in the console
+        print("Crawl started.")
+        """
         if(depth%20 == 0):
             print("depth: " + str(depth) + "/" + str(maxDepth))
             #Every 100 pages show the size of the queue
             if(depth%100 == 0):
                 print("Queue length: " + str(len(queue)))
-        
+        """
         if(debug):
             print("requesting: " + currentUrl)
         visited.append(currentUrl)
@@ -71,8 +73,8 @@ def crawl(seed, count_seed):
             page = session.get(currentUrl, timeout=5)
             if download:
                 #save the current page's html to the repositroy folder
-                #completePath = os.path.normpath(savePath + seed.split(":")[1] + "\\" + str(depth) + ".html")
-                completePath = os.path.normpath(savePath + seed.split(":")[1] + "\\" + currentUrl + ".html")
+                completePath = os.path.normpath(savePath + seed.split(":")[1] + "\\" + str(depth) + ".html")
+                #completePath = os.path.normpath(savePath + seed.split(":")[1] + "\\" + currentUrl + ".html")
                 with open(completePath, 'w', encoding="utf-8") as file:
                     file.write(page.text)
                 
